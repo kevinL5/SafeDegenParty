@@ -1,1 +1,1 @@
-# SuperBlock
+# Safe Degen Party
