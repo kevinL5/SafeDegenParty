@@ -1,20 +1,22 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Lottery, MockAggregator } from "../typechain";
+import { Lottery, MockAggregatorV3 } from "../typechain";
 
 describe("Lottery - participate", function () {
   let lottery: Lottery;
-  let mockAggregator: MockAggregator;
+  let mockAggregatorV3: MockAggregatorV3;
 
   beforeEach(async () => {
-    const MockAggregator = await ethers.getContractFactory("MockAggregator");
-    mockAggregator = await MockAggregator.deploy();
+    const MockAggregatorV3 = await ethers.getContractFactory(
+      "MockAggregatorV3"
+    );
+    mockAggregatorV3 = await MockAggregatorV3.deploy();
 
-    await mockAggregator.setRound(1);
+    await mockAggregatorV3.setRoundData(1, 4000, 0, 0, 0);
 
     const Lottery = await ethers.getContractFactory("Lottery");
-    lottery = await Lottery.deploy(mockAggregator.address);
+    lottery = await Lottery.deploy(mockAggregatorV3.address, 10);
     await lottery.deployed();
   });
 
@@ -63,8 +65,9 @@ describe("Lottery - participate", function () {
     ).to.be.reverted;
   });
 
-  it("should revert if latestRound > creationRound", async function () {
-    await mockAggregator.setRound(2);
+  it("should revert if latestRound > creationRound + diffBlock", async function () {
+    await mockAggregatorV3.setRoundData(42, 100, 0, 0, 0);
+
     await expect(
       lottery.participate(0, {
         value: ethers.utils.parseUnits("1", "wei"),

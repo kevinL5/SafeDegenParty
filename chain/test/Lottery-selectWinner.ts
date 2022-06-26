@@ -1,23 +1,24 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Lottery, MockAggregator } from "../typechain";
+import { Lottery, MockAggregatorV3 } from "../typechain";
 
 describe("Lottery - select winner", function () {
   // const [, addr1, addr2] = await ethers.getSigners();
   let lottery: Lottery;
-  let mockAggregator: MockAggregator;
+  let mockAggregatorV3: MockAggregatorV3;
 
   beforeEach(async () => {
     const [, addr1] = await ethers.getSigners();
-    const MockAggregator = await ethers.getContractFactory("MockAggregator");
-    mockAggregator = await MockAggregator.deploy();
+    const MockAggregatorV3 = await ethers.getContractFactory(
+      "MockAggregatorV3"
+    );
+    mockAggregatorV3 = await MockAggregatorV3.deploy();
 
-    await mockAggregator.setRound(1);
-    await mockAggregator.setAnswer(4000);
+    await mockAggregatorV3.setRoundData(1, 4000, 0, 0, 0);
 
     const Lottery = await ethers.getContractFactory("Lottery");
-    lottery = await Lottery.deploy(mockAggregator.address);
+    lottery = await Lottery.deploy(mockAggregatorV3.address, 10);
     await lottery.deployed();
 
     await lottery.participate(0, {
@@ -27,8 +28,7 @@ describe("Lottery - select winner", function () {
       value: ethers.utils.parseUnits("1", "wei"),
     });
 
-    await mockAggregator.setRound(2);
-    await mockAggregator.setAnswer(1000);
+    await mockAggregatorV3.setRoundData(42, 1000, 0, 0, 0);
   });
 
   it("should revert if select winner is not called by owner", async function () {
@@ -41,7 +41,7 @@ describe("Lottery - select winner", function () {
   });
 
   it("should revert if latestRound <= creationRound", async function () {
-    await mockAggregator.setRound(1);
+    await mockAggregatorV3.setRoundData(1, 4000, 0, 0, 0);
 
     await expect(lottery.selectWinner()).to.be.reverted;
   });

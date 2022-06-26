@@ -1,28 +1,30 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Lottery, MockAggregator } from "../typechain";
+import { Lottery, MockAggregatorV3 } from "../typechain";
 
 describe("Lottery - withdraw", function () {
   let lottery: Lottery;
-  let mockAggregator: MockAggregator;
+  let mockAggregatorV3: MockAggregatorV3;
   const betValue = ethers.utils.parseUnits("10", "ether");
 
   beforeEach(async () => {
-    const MockAggregator = await ethers.getContractFactory("MockAggregator");
-    mockAggregator = await MockAggregator.deploy();
+    const MockAggregatorV3 = await ethers.getContractFactory(
+      "MockAggregatorV3"
+    );
+    mockAggregatorV3 = await MockAggregatorV3.deploy();
 
-    await mockAggregator.setRound(1);
+    await mockAggregatorV3.setRoundData(1, 4000, 0, 0, 0);
 
     const Lottery = await ethers.getContractFactory("Lottery");
-    lottery = await Lottery.deploy(mockAggregator.address);
+    lottery = await Lottery.deploy(mockAggregatorV3.address, 10);
     await lottery.deployed();
 
     await lottery.participate(0, {
       value: betValue,
     });
 
-    await mockAggregator.setRound(2);
+    await mockAggregatorV3.setRoundData(42, 1000, 0, 0, 0);
   });
 
   it("should revert if not participant", async function () {
