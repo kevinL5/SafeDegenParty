@@ -22,7 +22,7 @@ const { chains, provider } = configureChains(
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "Super Block",
+  appName: "Safe Degen Party",
   chains,
 });
 
